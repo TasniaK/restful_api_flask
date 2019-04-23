@@ -21,11 +21,15 @@ tasks = [
 ]
 
 # Base path to access this service.
-@app.route('/todo/api/v1.0/tasks', methods=['GET'])
+@app.route('/todo/api/v1.0/tasks/<int:task_id>', methods=['GET'])
+def get_task(task_id):
+    # Shorthand for list comprehension.
+    task = [task for task in tasks if task['id'] == task_id]
 
-# Flask's jsonify function returns above task data as JSON data.
-def get_tasks():
-    return jsonify({'tasks': tasks})
+    # If no id is given.
+    if len(task) == 0:
+        abort(404)
+    return jsonify({'task': task[0]})
 
 if __name__ == '__main__':
     app.run(debug=True)
