@@ -1,5 +1,6 @@
 #!flask/bin/python
-from flask import Flask, jsonify, abort, make_response, request
+from flask import Flask, jsonify, abort, make_response, request, url_for
+from flask_httpauth import HTTPBasicAuth
 
 app = Flask(__name__)
 
@@ -20,13 +21,26 @@ tasks = [
     }
 ]
 
-# Base path to access this service.
+auth = HTTPBasicAuth()
+
+@auth.get_password
+def get_password(username):
+    if username == 'tasnia':
+        return 'python'
+    return None
+
+@auth.error_handler
+def unauthorized():
+    return make_response(jsonify({'error': 'Unauthorized access'}), 403)
+
 @app.route('/todo/api/v1.0/tasks', methods=['GET'])
+@auth.login_required
 def get_tasks():
-    return jsonify({'tasks': tasks})
+    return jsonify({'tasks': [make_public_task(task) for task in tasks]})
 
 # Get task by user inputted id.
 @app.route('/todo/api/v1.0/tasks/<int:task_id>', methods=['GET'])
+@auth.login_required
 def get_task(task_id):
     # Shorthand for list comprehension.
     task = [task for task in tasks if task['id'] == task_id]
@@ -43,6 +57,7 @@ def not_found(error):
 
 # Add task with post method.
 @app.route('/todo/api/v1.0/tasks', methods=['POST'])
+@auth.login_required
 def create_task():
     # If request is not in JSON format or there is no title.
     if not request.json or not 'title' in request.json:
@@ -60,6 +75,7 @@ def create_task():
 
 # Update a task with put method.
 @app.route('/todo/api/v1.0/tasks/<int:task_id>', methods=['PUT'])
+@auth.login_required
 def update_task(task_id):
     task = [task for task in tasks if task['id'] == task_id]
     if len(task) == 0:
@@ -79,12 +95,23 @@ def update_task(task_id):
 
 # Delete task with delete method.
 @app.route('/todo/api/v1.0/tasks/<int:task_id>', methods=['DELETE'])
+@auth.login_required
 def delete_task(task_id):
     task = [task for task in tasks if task['id'] == task_id]
     if len(task) == 0:
         abort(404)
     tasks.remove(task[0])
     return jsonify({'result': True})
+
+# For clients, instead of task id, return public uri of task.
+def make_public_task(task):
+    new_task = {}
+    for field in task:
+        if field == 'id':
+            new_task['uri'] = url_for('get_task', task_id=task['id'], _external=True)
+        else:
+            new_task[field] = task[field]
+    return new_task
 
 if __name__ == '__main__':
     app.run(debug=True)
