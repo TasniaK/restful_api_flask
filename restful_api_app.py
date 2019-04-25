@@ -21,6 +21,11 @@ tasks = [
 ]
 
 # Base path to access this service.
+@app.route('/todo/api/v1.0/tasks', methods=['GET'])
+def get_tasks():
+    return jsonify({'tasks': tasks})
+
+# Get task by user inputted id.
 @app.route('/todo/api/v1.0/tasks/<int:task_id>', methods=['GET'])
 def get_task(task_id):
     # Shorthand for list comprehension.
