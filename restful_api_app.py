@@ -1,4 +1,5 @@
-#!flask/bin/python
+#! /bin/python
+
 from flask import Flask, jsonify, abort, make_response, request, url_for
 from flask_httpauth import HTTPBasicAuth
 
@@ -45,7 +46,7 @@ def get_task(task_id):
     # Shorthand for list comprehension.
     task = [task for task in tasks if task['id'] == task_id]
 
-    # If no id is given.
+    # If no task is found.
     if len(task) == 0:
         abort(404)
     return jsonify({'task': task[0]})
