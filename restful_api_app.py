@@ -2,25 +2,31 @@
 
 from flask import Flask, jsonify, abort, make_response, request, url_for
 from flask_httpauth import HTTPBasicAuth
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from config import Config
 
 app = Flask(__name__)
 
+app.config.from_object(Config)
+
 # Array of dictionaries, simpler than using a db for now.
 # u for unicode so special characters do not break it.
-tasks = [
-    {
-        'id': 1,
-        'title': u'Buy groceries',
-        'description': u'Milk, Cheese, Pizza, Fruit, Ibuprofen',
-        'done': False
-    },
-    {
-        'id': 2,
-        'title': u'Learn Python',
-        'description': u'Need to find a good Python tutorial on the web',
-        'done': False
-    }
-]
+
+# tasks = [
+#     {
+#         'id': 1,
+#         'title': u'Buy groceries',
+#         'description': u'Milk, Cheese, Pizza, Fruit, Ibuprofen',
+#         'done': False
+#     },
+#     {
+#         'id': 2,
+#         'title': u'Learn Python',
+#         'description': u'Need to find a good Python tutorial on the web',
+#         'done': False
+#     }
+# ]
 
 auth = HTTPBasicAuth()
 
@@ -113,6 +119,11 @@ def make_public_task(task):
         else:
             new_task[field] = task[field]
     return new_task
+
+# Represents the db as an object.
+db = SQLAlchemy(app)
+# Represents the migration engine as an object.
+migrate = Migrate(app, db)
 
 if __name__ == '__main__':
     app.run(debug=True)
